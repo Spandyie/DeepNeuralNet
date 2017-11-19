@@ -40,10 +40,23 @@ def initialize_parameters(layer_dim):
         assert(parameters['b' + str(i)].shape == (layer_dim[i], 1))
     return parameters
 ########################################
-def BatchNormalization(z):
-    mean, variance = tf.nn.moment(Z)
-    z_norm = tf.divide(tf.subtract(z-mean),tf.sqrt(variance))
-    return z_norm
+def BatchNormalization(inputs, is_training, decay = 0.999,epsilon=1e-3):
+    scale =    tf.Variable(tf.ones([inputs.get_shape()[0]]))
+    beta =     tf.Variable(tf.zeros([inputs.get_shape()[0]]))
+    pop_mean = tf.Variable(tf.zeros([inputs.get_shape()[0]]), trainable=False)
+    pop_var =  tf.Variable(tf.ones([inputs.get_shape()[0]]), trainable=False)
+    if is_training:
+        batch_mean, batch_var = tf.nn.moments(inputs,[0])
+        train_mean = tf.assign(pop_mean,
+                               pop_mean * decay + batch_mean * (1 - decay))
+        train_var = tf.assign(pop_var,
+                              pop_var * decay + batch_var * (1 - decay))
+        with tf.control_dependencies([train_mean, train_var]):
+            return tf.nn.batch_normalization(inputs,
+                batch_mean, batch_var, beta, scale, epsilon)
+    else:
+        return tf.nn.batch_normalization(inputs,
+            pop_mean, pop_var, beta, scale, epsilon)
     ################################################3
 def forward_propagation(X, parameters):
     """ This function creates the forward propagation model"""
@@ -52,8 +65,12 @@ def forward_propagation(X, parameters):
     for i in range(1,L):
         A_Prev = AL
         z = tf.add(tf.matmul(parameters["W"+str(i)], A_Prev),parameters["b"+str(i)]) 
+        z=  tf.layers.batch_normalization (z,axis =0, center =True, scale = True, training= True)
+        #z=BatchNormalization(z, is_training = True)
         AL = tf.nn.relu(z)
     z = tf.add(tf.matmul(parameters["W" +str(L)],AL),parameters["b"+str(L)])
+    #z=BatchNormalization(z, is_training = True)
+    z=  tf.layers.batch_normalization (z, axis=0,center =True, scale = True, training= True)
     return z
 ######################################################
 def cost_calculation(Z,Y):
@@ -174,11 +191,11 @@ with tf.Session() as sess:
             EpochCostList.append(epoch_cost)
     parameters = sess.run(parameters)
     train_prediction = sess.run([predictions],feed_dict={X:Xtrain,Y:Y_train})
-    test_prediction = sess.run([predictions],feed_dict={X:Xtest,Y:Y_test})
+    #test_prediction = sess.run([predictions],feed_dict={X:Xtest,Y:Y_test})
     # find the total prediction
 #############################################################################
 print(">> Training error>> ", accuracy(train_prediction,Y_train))
-print(">> Training error>> ", accuracy(test_prediction,Y_test))
+#print(">> Training error>> ", accuracy(test_prediction,Y_test))
 
 #plot the cost
 plt.plot(np.squeeze(EpochCostList))
