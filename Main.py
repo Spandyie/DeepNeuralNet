@@ -144,7 +144,7 @@ tf.set_random_seed(1)
 seed = 0
 print_cost = True
 learningRate=0.0001
-num_epoch=150
+num_epoch=2000
 Data_list=[]
 mini_batch=[]
 mini_batch_labels=[]
@@ -156,9 +156,9 @@ n_x = Xtrain.shape[0]
 n_y = len(np.unique(Ytrain))  # shape of output
 #layers_dim= [n_x,100,50,50, n_y]  #dimension of neural netowork
 
-h_1 = 200#200 # No neurons in the 1st hidden layer
-h_2 = 100#100 # No neurons in the 2nd hidden layer
-h_3 = 50  # No neurons in the 3rd hidden layer
+h_1 = 500#200 # No neurons in the 1st hidden layer
+h_2 = 300#100 # No neurons in the 2nd hidden layer
+h_3 = 100  # No neurons in the 3rd hidden layer
 layers_dim = [n_x,h_1,h_2,h_3, n_y]
 m= Xtrain.shape[1]
 
@@ -194,7 +194,7 @@ with tf.Session() as sess:
     #test_prediction = sess.run([predictions],feed_dict={X:Xtest,Y:Y_test})
     # find the total prediction
 #############################################################################
-print(">> Training error>> ", accuracy(train_prediction,Y_train))
+print(">> Training accuracy>> ", accuracy(train_prediction,Y_train))
 #print(">> Training error>> ", accuracy(test_prediction,Y_test))
 
 #plot the cost
